@@ -1,43 +1,52 @@
 library("XML")
 library("httr")
-
-# http://www.officeholidays.com/countries/{country}/{year}.php
-
-fileURL <- 'http://www.officeholidays.com/countries/france/2016.php'
-generalHoliday <- '//tr[@class="holiday" or @class="regional"]/td/span[@class="mobile_ad"]'
-
-page <- htmlTreeParse(fileURL, useInternalNodes = T)
-x <- xpathSApply(page, generalHoliday, xmlValue)
-data.frame(date = x)
-
+library(countrycode)
 
 parseCountryHolidays <- function(countries, years) {
-  holidays <- data.frame()
+  holidays <- c()
+  countriesLong <- tolower(countrycode(toupper(countries), "iso2c", "country.name"))
   for (c in countries) {
-    holidays <- dplyr::bind_cols(holidays, parseCountry(c, years))
-  }
-}
-# cbind.fill (plyr)
-
-parseCountry <- function(country, years) {
-  holidays <- data.frame(character(), stringsAsFactors = FALSE)
-  names(holidays) <- country
-
-  for (y in years) {
-    holidays <- dplyr::bind_rows(holidays, parseYear(y, country))
+    holidays <- c(holidays, parseCountry(c, years))
   }
   holidays
 }
 
+dateToISO <- function(table,year=2015) {
+  lct <- Sys.getlocale("LC_TIME"); Sys.setlocale("LC_TIME", "C")
+  as.Date(sapply(lapply(table, FUN = function(elem) {
+    if (grepl(pattern = "\\w{3}\\s\\d{1,2}", x = elem)) {
+      replace <- paste("\\2\\1", year, sep = "")
+      strTime <- sub(pattern = '(\\w{3})\\s(\\d{1,2})', replacement = replace, x = elem)
+      as.character(format(strptime(strTime, "%d%b%Y"),"%Y/%m/%d/%m"))
+    } else {
+      as.character(sub(pattern = '(\\d{2})/(\\d{2})/(\\d{4})', replacement = "\\3/\\2/\\1", x = elem))
+    }
+  }), function(x) as.character(x)))
+}
+
+parseCountry <- function(country, years) {
+  holidays <- data.frame(stringsAsFactors = FALSE)
+
+  countryISO2 <- countrycode(toupper(country), "iso2c", "country.name")
+  countryISO2 <- sub(pattern = '\\s', replacement = "_", x = countryISO2)
+  for (y in years) {
+    holidays <- dplyr::bind_rows(holidays, parseYear(y, countryISO2))
+  }
+  
+  names(holidays) <- toupper(country)
+  holidays
+}
+
 parseYear <- function(year, country) {
+  # http://www.officeholidays.com/countries/{country}/{year}.php
   fileURL <- paste('http://www.officeholidays.com/countries/', country, '/', year,'.php',
                    sep = "")
   page <- htmlTreeParse(fileURL, useInternalNodes = T)
 
   generalHoliday <- '//tr[@class="holiday" or @class="regional"]/td/span[@class="mobile_ad"]'
   x <- xpathSApply(page, generalHoliday, xmlValue)
-
-  d <- data.frame(x)
+  
+  d <- data.frame(dateToISO(x, year = year))
   names(d) <- country
   d
 }
