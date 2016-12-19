@@ -2,8 +2,11 @@ library(XML)
 library(httr)
 library(countrycode)
 
-isHoliday <- function(dates,country,holidays=FALSE) {
-  as.Date(dates) %in% holidays[[country]]
+isCountryHoliday <- function(dates,country,holidays=FALSE) {
+  hd <- ifelse(holidays && !is.null(holidays[[country]]),
+               holidays[[country]],
+               parseCountry(country, unique(format(as.Date(dates),'%Y'))))[[1]]
+  as.Date(dates) %in% hd
 }
 
 parseCountryHolidays <- function(countries, years) {
