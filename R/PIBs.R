@@ -55,7 +55,11 @@ PIBs <- function(ruta="./Dades",
 
   #Añadir el tipo de economía y la localización del país
   a <- dplyr::inner_join(PIBPais,TipoPais,by="iso3c",copy=TRUE)
-  a
+
+  #Eliminar del dataframe aquellos países que no tienen Region (de los datos origen hay países ficticios que son agregaciones)
+    b <- LimpiaPIBs(a)
+
+  b
 }
 
 LimpiaPIBs <- function(df){
@@ -63,21 +67,31 @@ LimpiaPIBs <- function(df){
   #Entrada: dataframe de PIBs por países con las columnas "Region" e "IncomeGroup"
   #Salida: dataframe sin las observaciones que tengan blanco en Region o en IncomeGroup
 
-  a <- df[!(is.na(df$Region) | df$Region==""), ]
-#  b <- df[!(is.na(a$IncomeGroup) | a$IncomeGroup==""), ]
-#  b
+  lvls <- levels(df$Region)
+  lvls <- lvls[lvls != ""]
+  dfFiltered <- filter(df,df$Region %in% lvls)
+  
 }
 
 PintaRegion <- function(df,coloret="red"){
   #Función que muestra en BoxPlot el PIB por región
-  lvls <- levels(l$Region)
-  lvls <- lvls[lvls != ""]
-  dfFiltered <- filter(df,df$Region %in% lvls)
-  boxplot(PIB ~ droplevels(Region), data = dfFiltered, col = coloret)
+#  lvls <- levels(df$Region)
+#  lvls <- lvls[lvls != ""]
+#  dfFiltered <- filter(df,df$Region %in% lvls)
+  boxplot(PIB ~ droplevels(Region), data = df, col = coloret)
 }
 
-PintaGrupo <- function(df,coloret="red"){
+PintaIncomeGroup <- function(df,coloret="red"){
   #Función que muestra en BoxPlot el PIB por región
   boxplot(PIB ~ droplevels(IncomeGroup), data = df, col = coloret)
 }
+
+PIBxIncomeGroup <- function(df){
+  #Pinta el PIB por Grupo de Economía
+  ll <- aggregate(PIB~IncomeGroup,df,mean)
+  a <- ll[order(ll$PIB),]
+  barplot(a$PIB,main="PIB por Tipo Economía",names.arg=a$IncomeGroup,col = "red")
+}
+
+
 aa<-PIBs()

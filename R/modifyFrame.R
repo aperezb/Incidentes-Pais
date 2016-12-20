@@ -1,5 +1,10 @@
 source("./R/parseHolidays.R")
 
+addHolidaysToFrame <- function(totalTable) {
+  holidays <- getHolidays(totalTable)
+  setHolidays(totalTable,holidays)
+}
+
 getHolidays <- function(totalTable) {
   countries <- unique(totalTable$Country)
   years <- unique(format(as.Date(totalTable$Date),'%Y'))
