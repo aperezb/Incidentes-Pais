@@ -1,5 +1,5 @@
 #Create the data frame from a file containing the urls to parse
-data <- read.table("URLs_To_Parse.txt")
+data <- read.table("./Dades/URLs_To_Parse.txt")
 data$urls <- as.character(data$V1)
 # Know the length of the file that contains the urls to parse
 totalLen <- nrow(data)
@@ -130,3 +130,32 @@ for (i in 1 : nrow(countries)){
 }
 
 
+
+
+##################################
+
+source("./R/parseHolidays.R")
+
+totalTable$Holiday <- NULL
+  
+attackInHoliday <- function(totalTable) {
+  totalTable$Holiday <- NA
+  countries <- unique(totalTable$Country)
+  years <- unique(format(as.Date(totalTable$Date),'%Y'))
+  holidays <- getCountriesHolidays(countries = countries[!is.na(countries)], years = years[!is.na(years)])
+  for (c in countries) {
+    attackDates <- totalTable[totalTable$Country == c,]$Date
+    totalTable[totalTable$Country == c,]$Holiday <- isCountryHoliday(attackDates,c,holidays)
+  }
+  totalTable
+}
+# 
+# totalTable$HolidayAt <- NA
+# countries <- unique(totalTable$Country)
+# years <- unique(format(as.Date(totalTable$Date),'%Y'))
+# holidays <- getCountriesHolidays(countries = countries[!is.na(countries)], years = years[!is.na(years)])
+# for (c in countries) {
+#   print(c)
+#   attackDates <- totalTable[totalTable$Country == c,]$Date
+#   totalTable[totalTable$Country == c,]$Holiday <- isCountryHoliday(attackDates,c,holidays)
+# }
