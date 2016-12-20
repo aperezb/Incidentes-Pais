@@ -1,7 +1,7 @@
 #ruta="C:/Users/Angel/Dropbox/Master Ciberseg/03-Data Driven/RStudio/Practica"
 PIBs <- function(ruta="./Dades",
-                 fichPIBs="./API_NY.GDP.PCAP.PP.CD_DS2_en_csv_v2.csv",
-                 fichTipos="./Metadata_Country_API_NY.GDP.PCAP.PP.CD_DS2_en_csv_v2.csv"){
+                 fichPIBs="./Dades/API_NY.GDP.PCAP.PP.CD_DS2_en_csv_v2.csv",
+                 fichTipos="./Dades/Metadata_Country_API_NY.GDP.PCAP.PP.CD_DS2_en_csv_v2.csv"){
   # Propósito de la función: Obtener un Dataframe con PIBs de 2013 a 2016 de todos los países
   # Entrada:
   #   ruta--> Path donde se encuentran los archivos .CSV que precisa

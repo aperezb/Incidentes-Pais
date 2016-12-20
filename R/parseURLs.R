@@ -128,13 +128,16 @@ countries <- dplyr::filter(totalTable, grepl(pattern = "^.{5,50}$", x = Country)
 
 #auxTable <- data.frame("Date", "Attack", "Category", "Country")
 auxTable <- data.frame()
-for (i in 1:nrow(countries)){
+#For every cell with more than one country, how many countries are there?
+for (i in 1:nrow(countries)) {
   nCountries <- unlist(strsplit(countries$Country[[i]], split = "\\s|\\n"))
-  for (z in 1:length(nCountries)){
+  #For every country , create a new row with only 1 country each time
+  for (z in 1:length(nCountries)) {
     auxTable <- rbind(auxTable,data.frame(countries$Date[i],countries$Attack[i],countries$Category[i],nCountries[z]))
   }
 }
-names(auxTable)<- names(totalTable)
+#Put the same names as totalTable in order to be able to do rbind
+names(auxTable) <- names(totalTable)
 #Bind auxTable and TotalTable
 totalTable <- rbind(totalTable,auxTable)
 
