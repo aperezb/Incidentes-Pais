@@ -1,5 +1,8 @@
 #Create the data frame from a file containing the urls to parse
-data <- read.table("URLs_To_Parse.txt")
+source("./R/parseAttacks.R")
+source("./R/parseAttacks.R")
+#links <- getTimel
+data <- read.table("./Dades/URLs_To_Parse.txt")
 data$urls <- as.character(data$V1)
 # Know the length of the file that contains the urls to parse
 totalLen <- nrow(data)
@@ -117,16 +120,25 @@ totalTable$Date <- as.Date(sapply(lapply(totalTable$Date, FUN = function(elem) {
 #Delete the rows we don't need
 totalTable <- dplyr::filter(totalTable, grepl(pattern = "^[a-zA-Z].*" ,x = Country))
 totalTable <- dplyr::filter(totalTable, grepl(pattern = "[^Country]", x = Country))
-totalTable <- dplyr::filter(totalTable, grepl(pattern = "^.{2}$", x = Country))
-totalTable <- dplyr::arrange(totalTable, Country, Date)
+
 countries <- dplyr::filter(totalTable, grepl(pattern = "^.{5,50}$", x = Country))
 
-auxTable <- data.frame("Date", "Attack", "Category", "Country")
-for (i in 1 : nrow(countries)){
-  nCountries <- unlist(strsplit(countries$Country[[i]], split = " "))
-  for (z in 1 : nCountries){
-    auxTable <- cbind(auxTable,data.frame(countries$Date,countries$Attack,countries$Category,nCountries[z]))
+
+
+
+#auxTable <- data.frame("Date", "Attack", "Category", "Country")
+auxTable <- data.frame()
+for (i in 1:nrow(countries)){
+  nCountries <- unlist(strsplit(countries$Country[[i]], split = "\\s|\\n"))
+  for (z in 1:length(nCountries)){
+    auxTable <- rbind(auxTable,data.frame(countries$Date[i],countries$Attack[i],countries$Category[i],nCountries[z]))
   }
 }
+names(auxTable)<- names(totalTable)
+#Bind auxTable and TotalTable
+totalTable <- rbind(totalTable,auxTable)
 
-
+#Filter all the values to only get the countries that have 2 characters
+totalTable <- dplyr::filter(totalTable, grepl(pattern = "^.{2}$", x = Country))
+#Sort table by country, Date
+totalTable <- dplyr::arrange(totalTable, Country, Date)
