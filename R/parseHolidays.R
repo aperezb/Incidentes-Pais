@@ -5,16 +5,29 @@ library(countrycode)
 isCountryHoliday <- function(dates,country,holidays=FALSE) {
   hd <- ifelse(holidays && !is.null(holidays[[country]]),
                holidays[[country]],
-               parseCountry(country, unique(format(as.Date(dates),'%Y'))))[[1]]
+               getCountryHolidays(country, unique(format(as.Date(dates),'%Y'))))[[1]]
   as.Date(dates) %in% hd
 }
 
-parseCountryHolidays <- function(countries, years) {
+getCountriesHolidays <- function(countries, years) {
   holidays <- c()
   countriesLong <- tolower(countrycode(toupper(countries), "iso2c", "country.name"))
   for (c in countries) {
-    holidays <- c(holidays, parseCountry(c, years))
+    holidays <- c(holidays, getCountryHolidays(c, years))
   }
+  holidays
+}
+
+getCountryHolidays <- function(country, years) {
+  holidays <- data.frame(stringsAsFactors = FALSE)
+  
+  countryISO2 <- countrycode(toupper(country), "iso2c", "country.name")
+  countryISO2 <- sub(pattern = '\\s', replacement = "_", x = countryISO2)
+  for (y in years) {
+    holidays <- dplyr::bind_rows(holidays, parseYear(y, countryISO2))
+  }
+  
+  names(holidays) <- toupper(country)
   holidays
 }
 
@@ -29,19 +42,6 @@ dateToISO <- function(table,year=2015) {
       as.character(sub(pattern = '(\\d{2})/(\\d{2})/(\\d{4})', replacement = "\\3/\\2/\\1", x = elem))
     }
   }), function(x) as.character(x)))
-}
-
-parseCountry <- function(country, years) {
-  holidays <- data.frame(stringsAsFactors = FALSE)
-
-  countryISO2 <- countrycode(toupper(country), "iso2c", "country.name")
-  countryISO2 <- sub(pattern = '\\s', replacement = "_", x = countryISO2)
-  for (y in years) {
-    holidays <- dplyr::bind_rows(holidays, parseYear(y, countryISO2))
-  }
-  
-  names(holidays) <- toupper(country)
-  holidays
 }
 
 parseYear <- function(year, country) {
