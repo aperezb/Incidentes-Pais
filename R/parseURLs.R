@@ -158,12 +158,14 @@ category_Country <- cbind(category_Country, unique(totalTable$Country))
 names(category_Country)[6]<- "Country"
 category_Country <- dplyr::arrange(category_Country, desc(Total))
 
-completeCode <- countrycode(category_Country$Country,"iso2c","country.name")
-category_Country <- cbind(category_Country,completeCode)
+#completeCode <- countrycode(category_Country$Country,"iso2c","country.name")
+#category_Country <- cbind(category_Country,completeCode)
 
-printColoredMap(category_Country)
+#printColoredMap(category_Country)
 
-printColoredMap <- function(Country_Category_dataFrame) {
-  n <- joinCountryData2Map(Country_Category_dataFrame, joinCode="NAME", nameJoinColumn="completeCode")
-  mapCountryData(n, nameColumnToPlot="Total", mapTitle="World",missingCountryCol="black",oceanCol="lightblue",catMethod="categorical")
-}
+#printColoredMap <- function(Country_Category_dataFrame) {
+  n <- joinCountryData2Map(category_Country, joinCode="ISO2", nameJoinColumn="Country")
+  mapCountryData(n, nameColumnToPlot="Total", mapTitle="World",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50,546), addLegend = TRUE)
+
+
+#}
