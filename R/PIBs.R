@@ -94,4 +94,16 @@ PIBxIncomeGroup <- function(df){
 }
 
 
+Atacs_x_Pais <- function(totalTable,PIBs){
+#Agregar por num ataques País
+a <- data.frame(table(totalTable$Country))
+
+names(PIBs)[7] <- "Country"
+names(a)[1] <- "Country"
+
+#Afegir PIBs i agregacions pais al dataframe d'atacs
+df <- dplyr::left_join(a,PIBs,by="Country",copy=TRUE)
+
+}
+
 aa<-PIBs()
