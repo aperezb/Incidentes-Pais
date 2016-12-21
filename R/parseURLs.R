@@ -145,3 +145,25 @@ totalTable <- rbind(totalTable,auxTable)
 totalTable <- dplyr::filter(totalTable, grepl(pattern = "^.{2}$", x = Country))
 #Sort table by country, Date
 totalTable <- dplyr::arrange(totalTable, Country, Date)
+#Delete repeated rows
+totalTable <- unique(totalTable)
+
+category_Country <- as.data.frame.matrix(table(totalTable$Country,totalTable$Category))
+category_Country$`Industry: Telco`<-NULL
+category_Country$`N/A`<- NULL
+names(category_Country$`CW?`)<-"CW"
+category_Country$`CW?`<-NULL
+category_Country <- cbind(category_Country, Total = rowSums(category_Country))
+category_Country <- cbind(category_Country, unique(totalTable$Country))
+names(category_Country)[6]<- "Country"
+category_Country <- dplyr::arrange(category_Country, desc(Total))
+
+completeCode <- countrycode(category_Country$Country,"iso2c","country.name")
+category_Country <- cbind(category_Country,completeCode)
+
+printColoredMap(category_Country)
+
+printColoredMap <- function(Country_Category_dataFrame) {
+  n <- joinCountryData2Map(Country_Category_dataFrame, joinCode="NAME", nameJoinColumn="completeCode")
+  mapCountryData(n, nameColumnToPlot="Total", mapTitle="World",missingCountryCol="black",oceanCol="lightblue",catMethod="categorical")
+}
