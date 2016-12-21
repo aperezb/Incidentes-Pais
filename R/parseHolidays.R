@@ -2,11 +2,13 @@ library(XML)
 library(httr)
 library(countrycode)
 
-isCountryHoliday <- function(dates,country,holidays=list()) {
-  hd <- ifelse(length(holidays)!=0 && !is.null(holidays[[country]]),
-               holidays[[country]],
-               getCountryHolidays(country, unique(format(as.Date(dates),'%Y'))))[[1]]
-  as.Date(dates) %in% hd
+isCountryHoliday <- function(dates,country,holidays) {
+  # print(holidays)
+  # print(holidays[[country]])
+  # hd <- ifelse(length(holidays)!=0 && !is.null(holidays[[country]]),
+  #              holidays[[country]],
+  #              getCountryHolidays(country, unique(format(as.Date(dates),'%Y'))))[[1]]
+  as.Date(dates) %in% holidays
 }
 
 getCountriesHolidays <- function(countries, years) {
@@ -22,7 +24,7 @@ getCountriesHolidays <- function(countries, years) {
 
 getCountryHolidays <- function(country, years) {
   countryISO2 <- countrycode(toupper(country), "iso2c", "country.name")
-  print(countryISO2)
+  print(paste("Parsing",countryISO2,"holidays...",sep = " "))
   countryISO2 <- gsub(pattern = '\\s|\\n', replacement = "_", x = countryISO2)
   if (is.na(countryISO2)) {
     holidays <- data.frame(c(NA), stringsAsFactors = FALSE)

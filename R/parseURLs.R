@@ -141,35 +141,6 @@ names(auxTable) <- names(totalTable)
 #Bind auxTable and TotalTable
 totalTable <- rbind(totalTable,auxTable)
 
-
-##################################
-
-source("./R/parseHolidays.R")
-
-totalTable$Holiday <- NULL
-  
-attackInHoliday <- function(totalTable) {
-  totalTable$Holiday <- NA
-  countries <- unique(totalTable$Country)
-  years <- unique(format(as.Date(totalTable$Date),'%Y'))
-  holidays <- getCountriesHolidays(countries = countries[!is.na(countries)], years = years[!is.na(years)])
-  for (c in countries) {
-    attackDates <- totalTable[totalTable$Country == c,]$Date
-    totalTable[totalTable$Country == c,]$Holiday <- isCountryHoliday(attackDates,c,holidays)
-  }
-  totalTable
-}
-# 
-# totalTable$HolidayAt <- NA
-# countries <- unique(totalTable$Country)
-# years <- unique(format(as.Date(totalTable$Date),'%Y'))
-# holidays <- getCountriesHolidays(countries = countries[!is.na(countries)], years = years[!is.na(years)])
-# for (c in countries) {
-#   print(c)
-#   attackDates <- totalTable[totalTable$Country == c,]$Date
-#   totalTable[totalTable$Country == c,]$Holiday <- isCountryHoliday(attackDates,c,holidays)
-# }
-
 #Filter all the values to only get the countries that have 2 characters
 totalTable <- dplyr::filter(totalTable, grepl(pattern = "^.{2}$", x = Country))
 #Sort table by country, Date
