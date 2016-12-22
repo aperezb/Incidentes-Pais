@@ -14,6 +14,7 @@ source("R/parseURLs.R")
 source("R/modifyFrame.R")
 
 attacks <- parseURL()
+totalTable <- attacks
 holidays <- getHolidays(attacks$Date, attacks$Country)
 attacks <- setHolidays(attacks, holidays)
 resumAttacks <- summarizeHolidaysAttacks(attacks, holidays)
@@ -82,9 +83,10 @@ qplot(df.AtacsxPais$Freq,df.AtacsxPais$PIB,main="Ataques por Pais",xlab="Num.Ata
 #Quitar USA para tener una visualización de ése subconjunto
 df2 <- subset(df.AtacsxPais, Country != "US")
 Region <- df2$Region
-qplot(df2$Freq,df2$PIB,colour=Region,main="Ataques por Pais, sin USA",xlab="Num.Ataques",ylab="PIB")+xlim(0,50)
+qplot(df2$Freq,df2$PIB,colour=Region,main="Ataques por Pais, sin USA ni UK",xlab="Num.Ataques",ylab="PIB")+xlim(0,50)
 
 #ídem pero por tipo de economía
 df2 <- subset(df.AtacsxPais, Country != "US")
 Tipo_Economia <- df2$IncomeGroup
-qplot(df2$Freq,df2$PIB,colour=Tipo_Economia,main="Ataques por Pais, sin USA",xlab="Num.Ataques",ylab="PIB")+xlim(0,50)
+qplot(df2$Freq,df2$PIB,colour=Tipo_Economia,main="Ataques por Pais, sin USA ni UK",xlab="Num.Ataques",ylab="PIB")+xlim(0,50)
+
