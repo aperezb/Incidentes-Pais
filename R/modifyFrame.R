@@ -5,9 +5,9 @@ addHolidaysToFrame <- function(totalTable) {
   setHolidays(totalTable,holidays)
 }
 
-getHolidays <- function(totalTable) {
-  countries <- unique(totalTable$Country)
-  years <- unique(format(as.Date(totalTable$Date),'%Y'))
+getHolidays <- function(dates,countries) {
+  countries <- unique(countries)
+  years <- unique(format(as.Date(dates),'%Y'))
   getCountriesHolidays(countries[!is.na(countries)], years[!is.na(years)])
 }
 
@@ -20,7 +20,7 @@ setHolidays <- function(totalTable,holidays) {
 
 attackInCountryHoliday <- function(totalTable,holidays) {
   totalTable$Holiday <- NA
-  for (c in countries) {
+  for (c in unique(totalTable$Country)) {
     attackDates <- totalTable[totalTable$Country == c,]$Date
     totalTable[totalTable$Country == c,]$Holiday <- isCountryHoliday(attackDates,c,holidays)
   }
@@ -35,10 +35,22 @@ totalCountriesHoliday <- function(dates,holidays) {
 
 holidayIn <- function(dates,holidays) {
   isHoliday <- sapply(holidays, FUN = function(x) any(as.Date(dates) %in% x))
-  if (length(names(holidays[isHoliday])) <= 2) {
+  # if (length(names(holidays[isHoliday])) <= 2) {
     countries <- names(holidays[isHoliday])
-  } else {
-    countries <- c("> 2")
-  }
+  # } else {
+  #   countries <- c("> 2")
+  # }
   paste(countries,collapse = " ")
+}
+
+summarizeHolidaysAttacks <- function(totalTable, holidays) {
+  rel <- data.frame(country = character(), totalAttacks = integer(), holidayAttacks = double(), hoildays = integer(), "hoilday/year" = double(), "holidayAttacks/attacks" = double(), stringsAsFactors = FALSE)
+  for (co in unique(totalTable$Country)) {
+    hy <- length(holidays[[co]])
+    attacks <- length(totalTable[totalTable$Country == co,]$Date)
+    holidayAttacks <- length(totalTable[totalTable$Country == co & totalTable$Holiday == TRUE,]$Date)
+    country_rel <- data.frame(country = co, totalAttacks = attacks, holidayAttacks = holidayAttacks, hoildays = hy, "hoilday/year" = hy/365, "holidayAttacks/attacks" = holidayAttacks/attacks, stringsAsFactors = FALSE)
+    rel <- dplyr::bind_rows(rel, country_rel)
+  }
+  rel
 }

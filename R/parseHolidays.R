@@ -8,7 +8,7 @@ isCountryHoliday <- function(dates,country,holidays) {
   # hd <- ifelse(length(holidays)!=0 && !is.null(holidays[[country]]),
   #              holidays[[country]],
   #              getCountryHolidays(country, unique(format(as.Date(dates),'%Y'))))[[1]]
-  as.Date(dates) %in% holidays
+  as.Date(dates) %in% holidays[[country]]
 }
 
 getCountriesHolidays <- function(countries, years) {
@@ -26,6 +26,7 @@ getCountryHolidays <- function(country, years) {
   countryISO2 <- countrycode(toupper(country), "iso2c", "country.name")
   print(paste("Parsing",countryISO2,"holidays...",sep = " "))
   countryISO2 <- gsub(pattern = '\\s|\\n', replacement = "_", x = countryISO2)
+  countryISO2 <- ifelse(toupper(country)=="US","usa",countryISO2)
   if (is.na(countryISO2)) {
     holidays <- data.frame(c(NA), stringsAsFactors = FALSE)
   } else {
