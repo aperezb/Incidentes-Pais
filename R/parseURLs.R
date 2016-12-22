@@ -1,6 +1,8 @@
 #Create the data frame from a file containing the urls to parse
 source("./R/parseAttacks.R")
 source("./R/parseAttacks.R")
+
+parseURL <- function() {
 #links <- getTimel
 data <- read.table("./Dades/URLs_To_Parse.txt")
 data$urls <- as.character(data$V1)
@@ -145,3 +147,5 @@ totalTable <- rbind(totalTable,auxTable)
 totalTable <- dplyr::filter(totalTable, grepl(pattern = "^.{2}$", x = Country))
 #Sort table by country, Date
 totalTable <- dplyr::arrange(totalTable, Country, Date)
+
+}
