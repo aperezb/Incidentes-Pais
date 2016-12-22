@@ -90,7 +90,7 @@ PIBxIncomeGroup <- function(df){
   #Pinta el PIB por Grupo de Economía
   ll <- aggregate(PIB~IncomeGroup,df,mean)
   a <- ll[order(ll$PIB),]
-  barplot(a$PIB,main="PIB por Tipo Economía",names.arg=a$IncomeGroup,col = "red")
+  barplot(a$PIB,main="PIB por Tipo de Economia",names.arg=a$IncomeGroup,col = "red")
 }
 
 
