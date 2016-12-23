@@ -10,9 +10,10 @@ PIBs <- function(ruta="./Dades",
   # Salida, data.frame con:
   #   Country.Name --> nombre largo del país (p.e: Spain)
   #   iso3c --> Código 3 dígitos identificativo del pais (p.ej: ESP)
-  #   PIB2013...PIB2015 --> Cifra de PIB del país para de cada ejercicio
   #   PIB --> El PIB que se utilizará para las combinaciones
-  #   iso2c --> Código 2 dígitos identificativos del país (p.ej: ES)
+  #   Country --> Identificación País (ISO2)
+  #   Region --> Zona geográfica del País
+  #   IncomeGroup --> Tipo de economía del País
   # Los ficheros .CSV se obtienen de: http://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD
 
   # ASPECTOS PENDIENTES DE RESOLVER
@@ -27,35 +28,38 @@ PIBs <- function(ruta="./Dades",
   # Obtener relación de PIBs por país
   #setwd(ruta)
   PIBPaisFull <- read.csv(file = fichPIBs, skip = 4, header = TRUE, na.strings = 0)
-  PIBPais <- dplyr::select(PIBPaisFull,dplyr::one_of(c('Country.Name','Country.Code', 'X2013', 'X2014', 'X2015')))
+  PIBPais <- dplyr::select(PIBPaisFull,dplyr::one_of(c('Country.Name','Country.Code', 'X2015')))
   names(PIBPais)[2]<-"iso3c"
-  names(PIBPais)[3]<-"PIB2013"
-  names(PIBPais)[4]<-"PIB2014"
-
-  names(PIBPais)[5]<-"PIB2015"
-  #Lo siguiente es para que exista una variable con el PIB que se tratará (lo obtiene del PIB2015)
-  PIBPais$PIB <- PIBPais$PIB2015
+  names(PIBPais)[3]<-"PIB"
 
   #En el CSV del PIB tengo el Country Code en formato ISO3C, obtener el código en ISO2C (ISO3166)
   #En el dataframe de incidentes tengo los country codes en ISO2C
-  install.packages("countrycode")
-  library(countrycode)
+  #install.packages("countrycode")
+  #library(countrycode)
 
   iso3c <- PIBPais$iso3c
   iso2c <- countrycode(iso3c,"iso3c","iso2c")
   PIBPais <- dplyr::mutate(PIBPais,countrycode(iso3c,"iso3c","iso2c"))
-  names(PIBPais)[7]<-"iso2c"
+  names(PIBPais)[4]<-"Country"
 
   #Obtener del segundo CSV las características de país (tipo economía="IncomeGroup" y región="Region")
-  TipoPais <- read.csv(file=fichTipos,header=TRUE)
-  names(TipoPais)[1] <- "iso3c"
+  TipoP <- read.csv(file=fichTipos,header=TRUE)
+  names(TipoP)[1] <- "iso3c"
+  
+  TipoPais <- dplyr::select(TipoP,dplyr::one_of(c('iso3c','Region', 'IncomeGroup')))
+  
 
   #Reemplazar todos los NAs por 0
   PIBPais[is.na(PIBPais)] <- 0
 
   #Añadir el tipo de economía y la localización del país
   a <- dplyr::inner_join(PIBPais,TipoPais,by="iso3c",copy=TRUE)
-  a
+
+  #Eliminar del dataframe aquellos países que no tienen Region (de los datos origen hay países ficticios que son agregaciones)
+  b <- LimpiaPIBs(a)
+
+  b
+  
 }
 
 LimpiaPIBs <- function(df){
@@ -63,21 +67,46 @@ LimpiaPIBs <- function(df){
   #Entrada: dataframe de PIBs por países con las columnas "Region" e "IncomeGroup"
   #Salida: dataframe sin las observaciones que tengan blanco en Region o en IncomeGroup
 
-  a <- df[!(is.na(df$Region) | df$Region==""), ]
-#  b <- df[!(is.na(a$IncomeGroup) | a$IncomeGroup==""), ]
-#  b
+  lvls <- levels(df$Region)
+  lvls <- lvls[lvls != ""]
+  #dfFiltered <- filter(df,df$Region %in% lvls)
+  dfFiltered <- subset(df,Region %in% lvls)
 }
 
 PintaRegion <- function(df,coloret="red"){
   #Función que muestra en BoxPlot el PIB por región
-  lvls <- levels(l$Region)
-  lvls <- lvls[lvls != ""]
-  dfFiltered <- filter(df,df$Region %in% lvls)
-  boxplot(PIB ~ droplevels(Region), data = dfFiltered, col = coloret)
+#  lvls <- levels(df$Region)
+#  lvls <- lvls[lvls != ""]
+#  dfFiltered <- filter(df,df$Region %in% lvls)
+  boxplot(PIB ~ droplevels(Region), data = df, col = coloret)
 }
 
-PintaGrupo <- function(df,coloret="red"){
+PintaIncomeGroup <- function(df,coloret="red"){
   #Función que muestra en BoxPlot el PIB por región
   boxplot(PIB ~ droplevels(IncomeGroup), data = df, col = coloret)
 }
+
+PIBxIncomeGroup <- function(df){
+  #Pinta el PIB por Grupo de Economía
+  ll <- aggregate(PIB~IncomeGroup,df,mean)
+  a <- ll[order(ll$PIB),]
+  barplot(a$PIB,main="PIB por Tipo de Economia",names.arg=a$IncomeGroup,col = "red")
+}
+
+
+Atacs_x_Pais <- function(totalTable,PIBs){
+  #Agregar por num ataques País
+  a <- data.frame(table(totalTable$Country))
+
+  names(a)[1] <- "Country"
+
+  #Afegir PIBs i agregacions pais al dataframe d'atacs
+  df <- dplyr::left_join(a,PIBs,by="Country",copy=TRUE)
+}
+
+
+
 aa<-PIBs()
+
+
+
