@@ -147,7 +147,7 @@ totalTable <- dplyr::filter(totalTable, grepl(pattern = "^.{2}$", x = Country))
 totalTable <- dplyr::arrange(totalTable, Country, Date)
 #Delete repeated rows
 totalTable <- unique(totalTable)
-
+#Construct a table with only the values we need, that are country and attack category
 category_Country <- as.data.frame.matrix(table(totalTable$Country,totalTable$Category))
 category_Country$`Industry: Telco`<-NULL
 category_Country$`N/A`<- NULL
@@ -166,6 +166,7 @@ category_Country <- dplyr::arrange(category_Country, desc(Total))
 #printColoredMap <- function(Country_Category_dataFrame) {
   n <- joinCountryData2Map(category_Country, joinCode="ISO2", nameJoinColumn="Country")
   mapCountryData(n, nameColumnToPlot="Total", mapTitle="World",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50,546), addLegend = TRUE)
+# we see that attacks on USA and GB difficults the analysis of the plot, so we make up another table without them and repeat the plotting.
 
 
 #}
