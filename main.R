@@ -93,3 +93,12 @@ qplot(df2.AtacsxPais$Freq,df2.AtacsxPais$PIB,colour=Region,main="Ataques por Pai
 Tipo_Economia <- df2.AtacsxPais$IncomeGroup
 qplot(df2.AtacsxPais$Freq,df2.AtacsxPais$PIB,colour=Tipo_Economia,main="Ataques por Pais, sin US ni GB",xlab="Num.Ataques",ylab="PIB")+xlim(0,50)
 
+#--[Ahora pintamos valores logarítmicos]---------------
+#Por región
+Region <- df.AtacsxPais$Region
+qplot(log10(df.AtacsxPais$Freq),log10(df.AtacsxPais$PIB),main="Ataques por Pais y Region (log10)",xlab="Num.Ataques",ylab="PIB",colour=Region)
+#Por tipo de economía
+Tipo_Economia <- df.AtacsxPais$IncomeGroup
+qplot(log10(df.AtacsxPais$Freq),log10(df.AtacsxPais$PIB),colour=Tipo_Economia,main="Ataques por Pais y Tipo Economia (log10)",xlab="Num.Ataques",ylab="PIB")
+
+
