@@ -106,7 +106,3 @@ Atacs_x_Pais <- function(totalTable,PIBs){
 
 
 
-aa<-PIBs()
-
-
-
