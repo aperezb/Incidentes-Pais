@@ -167,6 +167,12 @@ category_Country <- dplyr::arrange(category_Country, desc(Total))
   n <- joinCountryData2Map(category_Country, joinCode="ISO2", nameJoinColumn="Country")
   mapCountryData(n, nameColumnToPlot="Total", mapTitle="World",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50,546), addLegend = TRUE)
 # we see that attacks on USA and GB difficults the analysis of the plot, so we make up another table without them and repeat the plotting.
-
-
+category_Country_Smooth <- category_Country[3:nrow(category_Country),]
+#Plot again
+n <- joinCountryData2Map(category_Country_Smooth, joinCode="ISO2", nameJoinColumn="Country")
+mapCountryData(n, nameColumnToPlot="Total", mapTitle="World",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50), addLegend = TRUE)
 #}
+
+#Create a vector with the sum of every kind of attack
+totalAttacks <- c("CC" = sum(category_Country$CC), "CE" = sum(category_Country$CE),"CW" = sum(category_Country$CW),"H" = sum(category_Country$H))
+#Most atacks are Ciber Crime and then Hijacking
