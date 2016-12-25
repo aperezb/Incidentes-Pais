@@ -179,4 +179,6 @@ parseURL <- function() {
   #Create a vector with the sum of every kind of attack
   totalAttacks <- c("CC" = sum(category_Country$CC), "CE" = sum(category_Country$CE),"CW" = sum(category_Country$CW),"H" = sum(category_Country$H))
   #Most atacks are Ciber Crime and then Hijacking
+  
+  totalTable
 }
