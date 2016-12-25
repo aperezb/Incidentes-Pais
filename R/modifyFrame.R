@@ -54,7 +54,7 @@ holidayIn <- function(dates,holidays) {
 summarizeHolidaysAttacks <- function(totalTable, holidays) {
   # Preparem el nou data frame amb les columnes que ens interessen.
   rel <- data.frame(country = character(), totalAttacks = integer(), holidayAttacks = double(), hoildays = integer(), "hoilday/year" = double(), "holidayAttacks/attacks" = double(), stringsAsFactors = FALSE)
-  years <- unique(format(as.Date(totalTable$Date),'%Y')) # Els anys dels atacs, no repetis, que interessen 
+  years <- length(unique(format(as.Date(totalTable$Date),'%Y'))) # Els anys dels atacs, no repetis, que interessen 
   totalDays = years*365 # Total de dies en tots els anys dels atacs. Per fer % correctament.
   # Per cada país del df original extreiem les seves estadistiques
   for (co in unique(totalTable$Country)) {
