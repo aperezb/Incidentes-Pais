@@ -6,6 +6,10 @@ library(countrycode)
 install.packages("dplyr")
 library(dplyr)
 library(ggplot2)
+library(MASS)
+
+install.packages("rworldmap")
+library("rworldmap")
 
 source("R/parseAttacks.R")
 source("R/parseHolidays.R")
@@ -29,7 +33,6 @@ attacks <- setHolidays(attacks, holidays)
 resumAttacks <- summarizeHolidaysAttacks(attacks, holidays)
 
 # Creació d'una gràfica de l'estil quesito per respresentar el total d'atacs en dies festius i no festius.
-library(MASS)
 # Mirem quants atacs en dies festius hi ha i fem es percentatge respecte el total d'atacs
 percentFestiu <- (length(attacks[attacks$Holiday == TRUE,]$Date)/length(attacks$Date))*100
 percentNoFestiu <- 100 - percentFestiu # Els dies no festius són el complementaris dels festius
@@ -77,9 +80,9 @@ qplot(df2.AtacsxPais$Freq,df2.AtacsxPais$PIB,colour=Tipo_Economia,main="Ataques 
 #--[Ahora pintamos valores logarítmicos]---------------
 #Por región
 Region <- df.AtacsxPais$Region
-qplot(log10(df.AtacsxPais$Freq),log10(df.AtacsxPais$PIB),main="Ataques por Pais y Region (log10)",xlab="Num.Ataques",ylab="PIB",colour=Region)
+qplot(log10(df.AtacsxPais$Freq),log10(df.AtacsxPais$PIB),main="Ataques por Pais y Region (log10)",xlab="Ataques",ylab="PIB",colour=Region)
 #Por tipo de economía
 Tipo_Economia <- df.AtacsxPais$IncomeGroup
-qplot(log10(df.AtacsxPais$Freq),log10(df.AtacsxPais$PIB),colour=Tipo_Economia,main="Ataques por Pais y Tipo Economia (log10)",xlab="Num.Ataques",ylab="PIB")
+qplot(log10(df.AtacsxPais$Freq),log10(df.AtacsxPais$PIB),colour=Tipo_Economia,main="Ataques por Pais y Tipo Economia (log10)",xlab="Ataques",ylab="PIB")
 
 
