@@ -1,6 +1,6 @@
 #Create the data frame from a file containing the urls to parse
 source("./R/parseAttacks.R")
-source("./R/parseAttacks.R")
+
 
 # Tot el codi del Carles dins d'una funció... En teoria parseja tots els atacs llistats a la pàgina web i crec wue també li ha fotut tot el codi per generar un mapa sexi... Per què separar el codi i fer-lo llegible? Nah, és to mainstream. El codi ordenat són els pares igual que el tió, els reis, el pare Noel... FUCK CARLES
 parseURL <- function() {
@@ -15,13 +15,13 @@ parseURL <- function() {
   library(XML)
   library(dplyr)
   totalTable <- data.frame()
-  
+
   #for(i in 1:totalLen) {
   #  rowInfo <- as.character(data[i,1])
   #  table <- readHTMLTable(row)
   #  totalTable <- dplyr::bind_rows(totalTable, table)
   #}
-  
+
   for(url in data$urls) {
     table <- readHTMLTable(url)
     totalTable <- dplyr::bind_rows(totalTable,table)
@@ -52,7 +52,7 @@ parseURL <- function() {
   names(totalTable)[24] <- "ID_4"
   names(totalTable)[25] <- "Target_Class_3"
   names(totalTable)[26] <- "Category_4"
-  
+
   #Unify all the IDs
   #totalTable <- dplyr::mutate(totalTable, ID = ifelse(test=is.na(ID_1), yes = ifelse(test = is.na(ID_2), yes = ifelse(test = is.na(ID_3), yes = ID_4, no = ID_3), no = ID_2),no = ID_1))
   #Unify all Dates
@@ -99,16 +99,16 @@ parseURL <- function() {
   totalTable$ID_4 <- NULL
   totalTable$Target_Class_3 <- NULL
   totalTable$Category_4 <- NULL
-  
+
   #solve the dates
-  
+
   # transformDates <- function(x){
   #   aux <- unlist(strsplit("May 16"," ", fixed=TRUE))
   #   strTime <- paste(aux[2],aux[1],"2015", sep="")
   #   x<-format(strptime(strTime, "%d%b%Y"), "%d/%m/%Y")
   # }
   # transformDates("May 16")
-  
+
   totalTable$Date <- as.Date(sapply(lapply(totalTable$Date, FUN = function(elem) {
     if (!grepl(pattern = ".*/", elem)) {
       strTime <- sub(pattern = '(\\w{3})\\s(\\d{1,2})', replacement = "\\2\\12015", x = elem)
@@ -117,18 +117,18 @@ parseURL <- function() {
       as.character(sub(pattern = '(\\d{2})/(\\d{2})/(\\d{4})', replacement = "\\3/\\2/\\1", x = elem))
     }
   }), function(x) as.character(x)))
-  
-  
+
+
   #totalTable$Date <- as.Date(sapply(kk, function(x) as.character(x)))
   #Delete the rows we don't need
   totalTable <- dplyr::filter(totalTable, grepl(pattern = "^[a-zA-Z].*" ,x = Country))
   totalTable <- dplyr::filter(totalTable, grepl(pattern = "[^Country]", x = Country))
-  
+
   countries <- dplyr::filter(totalTable, grepl(pattern = "^.{5,50}$", x = Country))
-  
-  
-  
-  
+
+
+
+
   #auxTable <- data.frame("Date", "Attack", "Category", "Country")
   auxTable <- data.frame()
   #For every cell with more than one country, how many countries are there?
@@ -139,11 +139,19 @@ parseURL <- function() {
       auxTable <- rbind(auxTable,data.frame(countries$Date[i],countries$Attack[i],countries$Category[i],nCountries[z]))
     }
   }
+
+
   #Put the same names as totalTable in order to be able to do rbind
   names(auxTable) <- names(totalTable)
   #Bind auxTable and TotalTable
   totalTable <- rbind(totalTable,auxTable)
-  
+
+  for(i in 1:nrow(totalTable)){
+    if(grepl(pattern = "^UK$", totalTable$Country[i])){
+      totalTable$Country[i] <- "GB"
+    }
+  }
+
   #Filter all the values to only get the countries that have 2 characters
   totalTable <- dplyr::filter(totalTable, grepl(pattern = "^.{2}$", x = Country))
   #Sort table by country, Date
@@ -160,25 +168,29 @@ parseURL <- function() {
   category_Country <- cbind(category_Country, unique(totalTable$Country))
   names(category_Country)[6]<- "Country"
   category_Country <- dplyr::arrange(category_Country, desc(Total))
-  
+
   #completeCode <- countrycode(category_Country$Country,"iso2c","country.name")
   #category_Country <- cbind(category_Country,completeCode)
-  
+
   #printColoredMap(category_Country)
-  
+
   #printColoredMap <- function(Country_Category_dataFrame) {
-    n <- joinCountryData2Map(category_Country, joinCode="ISO2", nameJoinColumn="Country")
-    mapCountryData(n, nameColumnToPlot="Total", mapTitle="World",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50,546), addLegend = TRUE)
+  n <- joinCountryData2Map(category_Country, joinCode="ISO2", nameJoinColumn="Country")
+
+  totalColoredMap <- mapCountryData(n, nameColumnToPlot="Total", mapTitle="Total attacks",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50,546), addLegend = TRUE)
   # we see that attacks on USA and GB difficults the analysis of the plot, so we make up another table without them and repeat the plotting.
   category_Country_Smooth <- category_Country[3:nrow(category_Country),]
   #Plot again
   n <- joinCountryData2Map(category_Country_Smooth, joinCode="ISO2", nameJoinColumn="Country")
-  mapCountryData(n, nameColumnToPlot="Total", mapTitle="World",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50), addLegend = TRUE)
+  dev.new()
+  ColoredMapNoUSA_UK <-mapCountryData(n, nameColumnToPlot="Total", mapTitle="World attacks (except USA UK)",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50), addLegend = TRUE)
   #}
-  
+
   #Create a vector with the sum of every kind of attack
   totalAttacks <- c("CC" = sum(category_Country$CC), "CE" = sum(category_Country$CE),"CW" = sum(category_Country$CW),"H" = sum(category_Country$H))
   #Most atacks are Ciber Crime and then Hijacking
-  
+  dev.new()
+  plotTotalAttacks <- barplot(totalAttacks, main = "Total registered attacks")
+
   totalTable
 }
