@@ -1,5 +1,5 @@
 ---
-title: "Análisis ciberataques por país, festivos y PIB"
+title: "Ataques por país, PIB y festivos"
 output: html_document
 ---
 
@@ -130,5 +130,5 @@ qplot(df2.AtacsxPais$Freq,df2.AtacsxPais$PIB,colour=Region,main="Ataques por Pai
 ```
   
 ## Conclusiones
-asdfasdfoiasdf asdf
+asdfasdfoiasdf asdf  
 
