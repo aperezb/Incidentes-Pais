@@ -22,7 +22,7 @@ getCountriesHolidays <- function(countries, years) {
 getCountryHolidays <- function(country, years) {
   # Passem el nom del país a format llarg
   countryISO2 <- countrycode(toupper(country), "iso2c", "country.name")
-  print(paste("Parsing",countryISO2,"holidays...",sep = " ")) # Indiquem el procés...
+ # print(paste("Parsing",countryISO2,"holidays...",sep = " ")) # Indiquem el procés...
   # En cas de països amb nom de més d'una paraula les saparem per "_" que és com ho demana el web
   countryISO2 <- gsub(pattern = '\\s|\\n', replacement = "_", x = countryISO2)
   # En el cas d'Estatus Units el web de holidays està clasificat com a "usa"

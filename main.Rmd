@@ -5,14 +5,13 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = FALSE)
 ```
 
-## Resumen
-
+### Resumen
 Esto es un estudio de los ciberataques asdf
 
-```{r load_packages, echo = FALSE, cache = TRUE, warning = FALSE}
-
+```{r load_packages, echo = FALSE, cache = FALSE, warning = FALSE}
 # Paquetes necesarios
 pkg <- c("countrycode", "dplyr", "rworldmap" )
 
@@ -23,16 +22,11 @@ if (length(new.pkg))
     install.packages(new.pkg)  
 }
 
-#install.packages("countrycode")
-library(countrycode)
-
-#install.packages("dplyr")
 library(dplyr)
 library(ggplot2)
 library(MASS)
-
-#install.packages("rworldmap")
-library("rworldmap")
+library(countrycode)
+library(rworldmap)
 
 source("R/parseAttacks.R")
 source("R/parseHolidays.R")
@@ -46,7 +40,7 @@ source("R/modifyFrame.R")
 ## Ciberataques por país
 Primero obtenemos todos la relación de ciberataques por fecha y país destino  
   
-``` {r AtaquesxPais, cache = TRUE, echo = FALSE, warning = FALSE}
+``` {r AtaquesxPais, echo = FALSE, warning = FALSE}
 # Recuprem tots els atacs que s'han fet i els guardem en un dataframe
 attacks <- parseURL()
 
@@ -57,7 +51,7 @@ attacks$Country[attacks$Country=="UK"] <- "GB"
 ## Festivos por país
 Ahora obtenemos los *festivos de cada país...*  
   
-``` {r FestivosxPais, cache = TRUE, echo = FALSE, warning = FALSE}
+``` {r FestivosxPais, echo = FALSE, warning = FALSE}
 # Recuperar els festius de tots els països que han rebut un atac. Només es recuperen des de l'any més petit fins a l'any més gran.
 holidays <- getHolidays(attacks$Date, attacks$Country)
 
@@ -70,7 +64,7 @@ resumAttacks <- summarizeHolidaysAttacks(attacks, holidays)
   
 Aquí se ve la proporción que hay de ataques en festivos vs no festivos  
   
-``` {r GraficaFestivos, cache = TRUE, echo = FALSE, warning = FALSE}
+``` {r GraficaFestivos, echo = FALSE, warning = FALSE}
 # Creació d'una gràfica de l'estil quesito per respresentar el total d'atacs en dies festius i no festius.
 # Mirem quants atacs en dies festius hi ha i fem es percentatge respecte el total d'atacs
 percentFestiu <- (length(attacks[attacks$Holiday == TRUE,]$Date)/length(attacks$Date))*100
@@ -91,7 +85,7 @@ Fuente [Worldbank](http://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD "GDP pe
 De esta fuente se obtienen dos archiovs CSV, uno con la relación de PIB por país y un segundo con la clasificación del mismo (región territorial y tipo de economía que tiene).  
 El retorno de la función es un único dataframe con la agregación resumida de ambos dataframes  
   
-``` {r CargarPIBs, cache = TRUE, echo = FALSE, warning = FALSE}
+``` {r CargarPIBs, echo = FALSE, warning = FALSE}
 #Obtener la relación de PIB por País
 df.PIBs <- PIBs()
 print("Muestra del dataframe resumido")
@@ -101,7 +95,7 @@ PIBxIncomeGroup(df.PIBs)
 ```
 ## Análisis Ataques por PIB
 Ahora juntamos el dataframe de los ataques por país con el PIB
-``` {r AtacsxPais, cache = TRUE, echo = FALSE, warning = FALSE}
+``` {r AtacsxPais, echo = FALSE, warning = FALSE}
 #Juntar en un solo dataframe los ataques por países y su PIB
 df.AtacsxPais <- Atacs_x_Pais(attacks,df.PIBs)
 #Eliminar los países que no tienen Region ni IncomeGroup
@@ -113,7 +107,7 @@ Pintamos relación de ataques por país y su PIB
 En él se observa cómo USA distorsiona la gráfica en cuanto número ataques, mientras que Qatar la distorsiona por PIB (no comment)  
   
   
-``` {r Gr_AtaquesxRegion, cache = TRUE, echo = FALSE, warning = FALSE}
+``` {r Gr_AtaquesxRegion, echo = FALSE, warning = FALSE}
 #Pinta gráfico de ataques por países (problema: Usa  demasiados ataques vs los otros)
 Region <- df.AtacsxPais$Region
 qplot(df.AtacsxPais$Freq,df.AtacsxPais$PIB,main="Ataques por Pais",xlab="Num.Ataques",ylab="PIB",colour=Region)
@@ -122,7 +116,7 @@ qplot(df.AtacsxPais$Freq,df.AtacsxPais$PIB,main="Ataques por Pais",xlab="Num.Ata
 Si quitamos a USA y UK vemos cómo la gráfica se se ve un poco mejor  
 
   
-``` {r GR_AtaquessinUSA, cache = TRUE, echo = FALSE, warning = FALSE}
+``` {r GR_AtaquessinUSA, echo = FALSE, warning = FALSE}
 #Quitar USA y UK para tener una visualización del resto de países (es más representativo)
 df2.AtacsxPais <- subset(df.AtacsxPais, Country != "US" & Country != "GB")
 Region <- df2.AtacsxPais$Region

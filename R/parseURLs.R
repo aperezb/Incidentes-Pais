@@ -182,14 +182,14 @@ parseURL <- function() {
   category_Country_Smooth <- category_Country[3:nrow(category_Country),]
   #Plot again
   n <- joinCountryData2Map(category_Country_Smooth, joinCode="ISO2", nameJoinColumn="Country")
-  dev.new()
+  # dev.new()
   ColoredMapNoUSA_UK <-mapCountryData(n, nameColumnToPlot="Total", mapTitle="World attacks (except USA UK)",missingCountryCol="black",oceanCol="lightblue",catMethod = c(0,10,20,30,40,50), addLegend = TRUE)
   #}
 
   #Create a vector with the sum of every kind of attack
   totalAttacks <- c("CC" = sum(category_Country$CC), "CE" = sum(category_Country$CE),"CW" = sum(category_Country$CW),"H" = sum(category_Country$H))
   #Most atacks are Ciber Crime and then Hijacking
-  dev.new()
+  # dev.new()
   plotTotalAttacks <- barplot(totalAttacks, main = "Total registered attacks")
 
   totalTable
