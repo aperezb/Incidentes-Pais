@@ -4,12 +4,12 @@ title: "Projecte R"
 output: html_document
 ---
 
-![Caption for the picture.](logoUPC.png)  
+![](logoUPC.png)  
   
-Àngel Pérez Beumala
-Carles Cano Casablanca
-Oriol Campderròs Arís
-Cristian Torres Barrantes
+Àngel Pérez Beumala  
+Carles Cano Casablanca  
+Oriol Campderròs Arís  
+Cristian Torres Barrantes  
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
