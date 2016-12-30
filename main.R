@@ -43,6 +43,10 @@ attacks <- setHolidays(attacks, holidays)
 # Dataframe amb un breu resum del num d'atacs per país, dies festius, atacs en festius...
 resumAttacks <- summarizeHolidaysAttacks(attacks, holidays)
 
+allAttacks <- attacks
+# Per calcular els atacs en festiu sense EEUU
+# attacks <- allAttacks[allAttacks$Country == "US",]
+
 # Creació d'una gràfica de l'estil quesito per respresentar el total d'atacs en dies festius i no festius.
 # Mirem quants atacs en dies festius hi ha i fem es percentatge respecte el total d'atacs
 percentFestiu <- (length(attacks[attacks$Holiday == TRUE,]$Date)/length(attacks$Date))*100
@@ -53,7 +57,7 @@ percentNoFestiu <- format(round(percentNoFestiu, 2), nsmall = 2)
 titleNoFestiu <- paste("No festius:",percentNoFestiu,"%",sep = " ")
 titleFestiu <- paste("Festius:",percentFestiu,"%",sep = " ")
 pie(table(attacks$Holiday), labels = c(titleNoFestiu,titleFestiu)) # Quesito style
-title(main = "Dies dels atacs")
+title(main = "Dies dels atacs (tots)")
 
 
 #Obtener la relación de PIB por País
