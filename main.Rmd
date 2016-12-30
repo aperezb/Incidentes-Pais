@@ -1,22 +1,27 @@
-
 ---
 title: "Projecte R"
-output: html_document
+author:
+- Carles Cano Casablanca  
+- Oriol Campderròs Arís  
+- Cristian Torres Barrantes  
+- Àngel Pérez Beumala  
+  
+output:
+  html_document:
+    highlight: pygments
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_float: no
 ---
 
-![](logoUPC.png)  
-  
-Àngel Pérez Beumala  
-Carles Cano Casablanca  
-Oriol Campderròs Arís  
-Cristian Torres Barrantes  
-
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(fig.align = 'center')
 
 # Paquetes necesarios
-pkg <- c("countrycode", "dplyr", "rworldmap" )
+pkg <- c("countrycode", "dplyr", "rworldmap", "xtable" )
 
 # Instalar paquetes que no esten instalados
 new.pkg <- pkg[!(pkg %in% installed.packages())]
@@ -25,34 +30,120 @@ if (length(new.pkg))
     install.packages(new.pkg)  
 }
 
+library(countrycode)
+library(XML)
 library(dplyr)
 library(ggplot2)
 library(MASS)
-library(countrycode)
+library(httr)
 library(rworldmap)
+library(xtable)
+library(knitr)
 
 source("R/parseAttacks.R")
 source("R/parseHolidays.R")
 source("R/PIBs.R")
 source("R/parseURLs.R")
 source("R/modifyFrame.R")
-
 ```
-
-
-## Ciberataques por país
-Primero obtenemos todos la relación de ciberataques por fecha y país destino  
   
-``` {r AtaquesxPais, echo = FALSE, warning = FALSE, message = FALSE}
-# Recuprem tots els atacs que s'han fet i els guardem en un dataframe
-attacks <- parseURL()
+![](logoUPC.png)  
+  
+#  Definició de la pregunta
+Si bé els primers ciberatacs que es van produir tenien una finalitat lúdica i de satisfacció personal, ràpidament han evolucionat cercant altres propòsits molt més preocupants que afecten tant l’administració pública, les empreses i els ciutadans en general.  
+  
+En el 2015, el nombre de 0-days descoberts i explotats va incrementar un 125% més que l’any anterior. En aquest mateix any es van produir una mitja d’un milió d’atacs a diari degut a què s’estima que el 75% de les pàgines web tenen vulnerabilitats no fixades.  
+  
+Dins d’aquest context, ens trobem en la situació en la qual els equips de resposta d’incidents (CERTS) han d’anar darrera dels ciberatacs un cop ja han succeït; sense saber quan i on serà el següent. Per tant, considerem que seria interessant proposar un estudi que pogués aportar informació als CERTS sobre un potencial atac a un país.  
+  
+Per fer-ho, és necessari estudiar les dades registrades dels ciberatacs a nivell mundial dels últims anys i intentar buscar una relació que ens permeti ubicar el pròxim esdeveniment en una zona i un interval de temps concret.  
+  
+Degut a què un alt percentatge dels atacs estan lligats a fins econòmics, la nostra atenció l’enfocarem a saber si hi ha una relació entre els països més atacats amb el seu nivell de riquesa.  Tot i així, aquest estudi ens portaria a saber el *target* però encara tindríem una finestra de 365 dies per esbrinar quan es podria produir.  
+  
+En aquest punt, introduïm una hipòtesis que participarà com a variable en la nostra investigació: creiem que els dies més apropiats per realitzar un atac són en els quals els països objectiu celebren un dia festiu a nivell nacional; ja que és probable que els organismes i empreses no comptin amb tot el personal de seguretat com en un dia ordinari.  
+
+Per tant, suposant que els recursos destinats a protegir els actius en dies festius es veuen reduïts, relacionarem aquest fet amb el nivell de riquesa del país. En conseqüència, la pregunta resultant que ens plantegem en aquest treball és la següent:  
+  
+**_Són els països amb un nivell de riquesa més elevat atacats en dies estratègics?_**
+  
+___
+#  Definició i obtenció de les dades  
+  
+En funció de la pregunta plantejada, contemplem buscar la relació entre les següents dades: ciberatacs, nivell de riquesa d'un país i dies festius d'aquest.  
+  
+## Ciberatacs
+  
+Pel que fa als ciberatacs ens interessa recopilar informació que registri quan es va produir l'atac, qui el va produir i el país objetiu. No obstant, hem hagut de descartar obtenir l'autor dels atacs ja que una gran quantitat dels registres no poden definir amb exactitud la procedència dels mateixos.  
+  
+Les dades han estat extretes d'una reconeguda font com és [hackmageddon](http://www.hackmageddon.com) que registra els ciberatacs a nivell mundial des de fa anys.  
+  
+## PPP
+  
+Quan volem comparar la riquesa entre diversos països el primer que se'ns pot ocórrer és comparar els seus productes interiors bruts. A major PIB, més riquesa en un país. No obstant això, comparar simplement el PIB realment no diu molt sobre l'economia d'un país, ja que no és el mateix tenir un país de cent mil habitants que un de mil milions. Per tant, s'ha d'utilitzar un altre indicador: el PPP (Purchasing Power Parity o Paritat de poder adquisitiu), el qual registra el PIB per càpita.  
+  
+Aquesta informació ha estat obtinguda del [WorldBank](http://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD), on hi figura el PPP de tots els països dels últims anys.  
+  
+## Dies festius
+  
+En els dies festius d'un país el més normal és que els equips de seguretat, encarregats de monitoritzar els events dels servidors, es vegin reduïts i hi hagi poc personal de guàrdia. Aquest pot ser un bon al·licient perquè els atacants duguin a terme els seus plans. Per altra banda, també poden aprofitar conéixer els dies  festius per realitzar atacs de denegació de servei dies abans (p. ex. atacar Amazon una setmana abans de Nadal).  
+  
+Les dades dels dies festius han estat extretes de la pàgina [Officeholidays](http://www.officeholidays.com/countries/{country}/{year}.php)  
+  
+___
+#  Dades elegants  
+  
+Les dades obtingudes de les fonts descrites a l'apartat anterior tenen un format que requereix d'un processat a mida; ja que hi ha valors buits o no vàlids.  
+  
+A continuació, es mostraran evidències sobre l'estat inicial dels diferents tipus de dades i els *data frames* finals obtinguts (dades elegants) després d'aplicar un conjunt de transformacions. Aquests seran amb els quals es treballarà en les següents seccions.  
+  
+## Ciberatacs
+  
+En la següent taula es veuen les dades dels ciberatacs produïts a nivell mundial. Com es pot apreciar, hi ha cel·les que tenen valors que no ens serveixen per treballar amb elles. Per tant, cal triar les files i columnes adients fent servir diferents llibreries i expressions regulars:  
+``` {r CargarAtaquesxPais, echo = FALSE, warning = FALSE, message = FALSE}
+# Recuperem tots els atacs que s'han fet
+totalTableAtacs <- Carga_Atacs1() #dataframe en brut
+attacks <- Carga_Atacs2(totalTableAtacs) #df d'atacs dia a dia per pais
+categoriesatacs <- Carga_Categories_atacs_Pais(attacks) #agregat per paissos
 
 #Modifico el ID de pais de UK por GB para United Kingdom, así lo tratan los dataframes de holidays y PIBs
 attacks$Country[attacks$Country=="UK"] <- "GB"
 ```
+
+``` {r ShowAtaquesBruto, echo = FALSE, warning = FALSE, message = FALSE}
+#xt <- xtable(summary(totalTableAtacs))
+#print(xt, type = "html")
+kable(head(totalTableAtacs,4), format = "markdown")
+````  
   
-## Festivos por país
-Ahora obtenemos los *festivos de cada país...*  
+Finalment, el resultat net final té els camps estrictament necessaris amb valors correctes, tal i com es pot apreciar en la següent taula (mostra de 4 elements):  
+
+``` {r ShowAtaquesNeto, echo = FALSE, warning = FALSE, message = FALSE}
+kable(head(attacks,4), format = "markdown")
+````  
+  
+  
+## PPP
+En les dades obtingudes del .csv que proporciona WorldBank, es pot apreciar com hi ha columnes sense valors així com també columnes que no ens interessa tractar (p.ex: les columnes d'anys anteriors a 2015).  
+  
+``` {r CargarPIBsBruto, echo = FALSE, warning = FALSE}
+PIBPaisFull <- PIBs1() #Obtiene el primer dataframe de PIBs en bruto
+kable(head(PIBPaisFull), format = "markdown")
+```
+  
+Un cop extretes les dades d'interès, el *data frame* obtingut que ens servirà per relacionar-lo amb les altres dades té el següent aspecte:  
+  
+``` {r CargarPIBs, echo = FALSE, warning = FALSE}
+df.PIBs <- PIBs2(PIBPaisFull)#Obtiene dataframe de PIBs  procesado
+#print("Muestra del dataframe resumido")
+#df.PIBs[3:12,3:6]
+#print("")
+kable(head(df.PIBs), format = "markdown")
+
+```
+  
+## Dies Festius
+  
+Finalment, l'últim grup de dades a tractar són els dies festius de tots els països. A diferència dels casos anteriors, on les dades s'extreien d'excels o fitxers .csv i es convertien en *data frames*, els festius es troben en diferents taules HTML dins d'una pàgina web i s'han de representar en una llista degut a què cada país té un número diferent. En la següent figura es poden apreciar les dades en brut:  
   
 ``` {r FestivosxPais, echo = FALSE, warning = FALSE}
 # Recuperar els festius de tots els països que han rebut un atac. Només es recuperen des de l'any més petit fins a l'any més gran.
@@ -65,8 +156,73 @@ attacks <- setHolidays(attacks, holidays)
 resumAttacks <- summarizeHolidaysAttacks(attacks, holidays)
 ```
   
-Aquí se ve la proporción que hay de ataques en festivos vs no festivos  
+``` {r MuestraFestivosBruto, echo = FALSE, warning = FALSE}
+kable(head(summary(holidays)), format = "markdown")
+```
   
+A continuació es pot veure una mostra de com queda el dataframe d'atacs havent incorporat informació dels festius:  
+
+``` {r ShowAtaquesNetoFest, echo = FALSE, warning = FALSE, message = FALSE}
+kable(head(attacks,4), format = "markdown")
+````  
+
+
+___
+# Interpretació dels resultats
+  
+Abans d'unir tota la informació per respondre directament la pregunta, analitzarem resultats intermitjos del processat de les dades per saber el context que l'envolta i poder obtenir unes millors conclusions.  
+  
+En primer lloc, estudiarem les dades extretes del WorldBank. En concret, podem començar per  agrupar els diferents països segons el seu nivell d'ingresos i veure quina mitja de PIB per càpita obtenim. Tal i com es pot apreciar en la figura que es mostra a continuació, hi ha quatre tipus d'economia: *Lower income*, *Lower middle income*, *Upper midle income* i *High income*.  
+
+``` {r PintaPIBPais, echo = FALSE, warning = FALSE, message = FALSE}
+PIBxIncomeGroup(df.PIBs)
+```
+Amb aquestes dades podem observar el PIB per càpita mig a partir del qual ens centrarem per seleccionar els països posteriorment.  
+  
+Per altra banda, havent vist els diferents tipus d'economies i els països als quals engloben, ens interessa saber el nombre d'atacs que es produeixen a aquests països. Per aquest motiu, hem generat el següent gràfic; el qual mostra la relació dels atacs amb el PIB per càpita de cada país atacat.  
+  
+``` {r AtacsxPais, echo = FALSE, warning = FALSE}
+#Juntar en un solo dataframe los ataques por países y su PIB
+df.AtacsxPais <- Atacs_x_Pais(attacks,df.PIBs)
+#Eliminar los países que no tienen Region ni IncomeGroup
+#(son muestras pequeñas sin datos de PIB del WorldBank)
+df.AtacsxPais <- subset(df.AtacsxPais, !is.na(Region) & !is.na(IncomeGroup))
+```
+  
+``` {r Gr_AtaquesxRegion, echo = FALSE, warning = FALSE}
+#Pinta gráfico de ataques por países (problema: Usa  demasiados ataques vs los otros)
+Region <- df.AtacsxPais$Region
+qplot(df.AtacsxPais$Freq,df.AtacsxPais$PIB,main="Ataques por Pais",xlab="Num.Ataques",ylab="PIB",colour=Region)
+```
+  
+Analitzant aquestes dades podem extreure diverses conclusions. En primer lloc, podem veure com Estats Units (l'*outlier* horitzontal) és el país més atacat amb gran diferència respecte els altres països. És curiós apreciar com hi ha altres potències, com Qatar i Luxemburg, que tot i tenir un PIB per càpita clarament més elevat que EEUU no reben ni deu vegades menys atacs.  
+  
+Per altra banda, es pot observar com no hi ha una gran, o com a mínim clara, distinció entre els diferents tipus d'economia. És a dir, regions amb un PIB per càpita al voltant de 50.000 tenen el mateix número d'atacs que altres considerades de baixos ingresos (*Lower income*).
+  
+Per poder seguir analitzant aquesta situació, cal representar aquesta gràfica d'una manera que ens faciliti la comprensió de les dades. Degut a aspectes de disseny, no hem pogut mostrar el nom de cada país a sobre de cada punt de la gràfica. A més, fer-ho per tonalitats de colors i referenciar-los amb una llegenda no solucionava el problema, més bé tot el contrari. Per tant, una millor representació visual de les dades la podem apreciar en el segënt mapa mundi:  
+  
+
+``` {r PintaAtaquesPais, echo = FALSE, warning = FALSE, message = FALSE}
+pintaMapaAtaques(attacks,categoriesatacs)
+```
+Ara ja podem distingir a primera vista els països que des de 2014 han reportat més atacats. Això vol dir que, amb les dades actuals que tenim, podem veure clarament que països com EEUU, Gran Bretanya, Canadà i Índia han rebut la majoria d'aquests atacs. No obstant, també hem d'assumir que hi ha incidents els quals no s'han reportat i que en conseqüència podria fer que aquesta distribució de la figura anterior variés.  
+  
+Per observar millor la situació dels altres països, farem *zoom* a la gràfica de punts anterior sense tenir en compte EEUU ni GB, els quals distorsionen el resultat i ens impedeixen realitzar un millor anàlisi.  
+  
+``` {r GR_AtaquessinUSA, echo = FALSE, warning = FALSE}
+#Quitar USA y UK para tener una visualización del resto de países (es más representativo)
+df2.AtacsxPais <- subset(df.AtacsxPais, Country != "US" & Country != "GB")
+Region <- df2.AtacsxPais$Region
+qplot(df2.AtacsxPais$Freq,df2.AtacsxPais$PIB,colour=Region,main="Ataques por Pais, sin US ni GB",xlab="Num.Ataques",ylab="PIB")
+```
+  
+Tal i com s'aprecia en la figura anterior, els països amb un major PIB per càpita (categoritzats anteriorment com *High income* es mostren dispersos entre ells. És a dir, no s'observa una tendència que indiqui que aquests països oscil·len entre un rang concret d'atacs i que per tant es diferencien dels que tenen menor poder adquisitiu.  
+  
+En aquest punt, podem començar a pensar si relacionar el PIB per càpita amb el número d'atacs no ha estat el millor indicador per aconseguir fer prediccions sobre futurs atacs. Tot i així, cal seguir analitzant la resta de dades per extreure resultats concloents.  
+  
+Un altre aspecte a considerar, descrit en la definició de la pregunta, són els dies festius del país atacat. La hipòtesi es basa en una intuïció que guarda relació amb el que ocorre en els dies festius d'un país: el personal de seguretat i mitigació d'incidents no és al complet. Amb aquest raonament, tot fa pensar que aquesta variable pot ser un bon indicador per ubicar en el temps els moments més propensos de què es produeixi un atac.  
+   
+Fent un còmput global de les dades dels festius extretes anterioment, en la següent gràfica podem veure el percentatge de dies festius en els quals es van realitzar atacs.  
 ``` {r GraficaFestivos, echo = FALSE, warning = FALSE}
 # Creació d'una gràfica de l'estil quesito per respresentar el total d'atacs en dies festius i no festius.
 # Mirem quants atacs en dies festius hi ha i fem es percentatge respecte el total d'atacs
@@ -80,52 +236,29 @@ titleFestiu <- paste("Festius:",percentFestiu,"%",sep = " ")
 pie(table(attacks$Holiday), labels = c(titleNoFestiu,titleFestiu)) # Quesito style
 title(main = "Dies dels atacs")
 ```
+Veient aquesta gràfica podem pensar que la hipòtesi sobre els dies festius que vam prendre com a partida inicial no és un aspecte que els atacants tenen en compte a l'hora d'assetjar un país. Podria ser que sí es produís però a l'inversa, és a dir, els països que realitzen els atacs ho fan quan és un dia festiu en el seu país. No obstant, degut a què en molts casos no ha estat possible registrar l'origen d'un atac, hem decidit no optar per aquesta hipòtesi.  
+  
+En la següent secció recollirem les conclusions extretes de les diferents gràfiques mostrades al llarg d'aquest projecte per determinar si països amb un PIB per càpita elevat són l'objectiu dels atacs i específicament en dies estratègics.  
+  
+___
+# Resposta a la pregunta
+Tal i com hem anat veient en els resultats intermitjos anteriors, en els quals la relació entre el PIB d'un país, el número d'atacs que rep i els dies festius no guarden la relació esperada, ja podem respondre a la pregunta plantejada.  
+  
+Tot sembla indicar que no hi ha una relació directa entre les tres variables tractades. Prenent com exemple EEUU, es pot apreciar com és un tipus d'economia *High income* que rep molts atacs, en concret 528, però que d'aquests només 17 cauen en festius. És a dir, un percentatge gens significatiu.  
+  
+En aquest exemple, la relació del PIB per càpita amb els dies festius no té rellevància. Si agaféssim altres països veuríem que la tèndencia és similar.  
+  
+Per tant, hem escollit malament la pregunta? Creiem que no és el cas ja que el raonament individual de cadascuna de les parts té un fonament lògic i realístic, però com hem pogut comprobar no guarden una relació entre elles.  
+  
+Els resultats extrets poden ser útils de cara a futurs treballs, ja que les variables treballades en aquest projecte poden ser descartades i es pot centrar l'atenció en buscar altres per trobar la relació i poder predir quan i on es produirà el següent atac.  
+  
+Com a reflexió final i en vista dels resultats de les gràfiques, pensem que potser seria interessant, de cara a un futur estudi, plantejar si en comptes de mirar si les economies amb més poder adquisitiu són les més atacades, intentar relacionar-ho amb el nivell de desenvolupament tecnològic, és a dir, els països punters en I+D, ja que potser una de les intencionalitats dels atacants és retrassar tot el procés de creació i innovació de la competència i guanyar terreny en aquest sentit. Això podria explicar, per exemple, per què EEUU és molt més atacat que altres països amb major riquesa però que alhora no són punters en I+D.  
+  
+``` {r PintaAtaquesPaisnoUSAGB, echo = FALSE, warning = FALSE, message = FALSE}
+#pintaMapaAtaques_noUSAGB(attacks,categoriesatacs)
+```
 
-## PIB por país
-Obtenemos la relación de PIB de cada país  
-Fuente [Worldbank](http://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD "GDP per Capita")  
-  
-De esta fuente se obtienen dos archiovs CSV, uno con la relación de PIB por país y un segundo con la clasificación del mismo (región territorial y tipo de economía que tiene).  
-El retorno de la función es un único dataframe con la agregación resumida de ambos dataframes  
-  
-``` {r CargarPIBs, echo = FALSE, warning = FALSE}
-#Obtener la relación de PIB por País
-df.PIBs <- PIBs()
-print("Muestra del dataframe resumido")
-df.PIBs[3:12,3:6]
-print("")
-PIBxIncomeGroup(df.PIBs)
+``` {r PintaResumAtacs, echo = FALSE, warning = FALSE, message = FALSE}
+#pintaResumAtacs(categoriesatacs)
 ```
-## Análisis Ataques por PIB
-Ahora juntamos el dataframe de los ataques por país con el PIB
-``` {r AtacsxPais, echo = FALSE, warning = FALSE}
-#Juntar en un solo dataframe los ataques por países y su PIB
-df.AtacsxPais <- Atacs_x_Pais(attacks,df.PIBs)
-#Eliminar los países que no tienen Region ni IncomeGroup
-#(son muestras pequeñas sin datos de PIB del WorldBank)
-df.AtacsxPais <- subset(df.AtacsxPais, !is.na(Region) & !is.na(IncomeGroup))
-```
-  
-Pintamos relación de ataques por país y su PIB  
-En él se observa cómo USA distorsiona la gráfica en cuanto número ataques, mientras que Qatar la distorsiona por PIB (no comment)  
-  
-  
-``` {r Gr_AtaquesxRegion, echo = FALSE, warning = FALSE}
-#Pinta gráfico de ataques por países (problema: Usa  demasiados ataques vs los otros)
-Region <- df.AtacsxPais$Region
-qplot(df.AtacsxPais$Freq,df.AtacsxPais$PIB,main="Ataques por Pais",xlab="Num.Ataques",ylab="PIB",colour=Region)
-```
-  
-Si quitamos a USA y UK vemos cómo la gráfica se se ve un poco mejor  
-
-  
-``` {r GR_AtaquessinUSA, echo = FALSE, warning = FALSE}
-#Quitar USA y UK para tener una visualización del resto de países (es más representativo)
-df2.AtacsxPais <- subset(df.AtacsxPais, Country != "US" & Country != "GB")
-Region <- df2.AtacsxPais$Region
-qplot(df2.AtacsxPais$Freq,df2.AtacsxPais$PIB,colour=Region,main="Ataques por Pais, sin US ni GB",xlab="Num.Ataques",ylab="PIB")
-```
-  
-## Conclusiones
-asdfasdfoiasdf asdf  
 

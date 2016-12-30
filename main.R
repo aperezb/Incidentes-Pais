@@ -1,15 +1,21 @@
 #Código principal que carga los dataframes que se precisan
 
-install.packages("countrycode")
-library(countrycode)
+# Paquetes necesarios
+pkg <- c("countrycode", "dplyr", "rworldmap" )
+# Instalar paquetes que no esten instalados
+new.pkg <- pkg[!(pkg %in% installed.packages())]
+if (length(new.pkg))
+{
+  install.packages(new.pkg)
+}
 
-install.packages("dplyr")
+library(countrycode)
+library(XML)
 library(dplyr)
 library(ggplot2)
 library(MASS)
-
-install.packages("rworldmap")
-library("rworldmap")
+library(httr)
+library(rworldmap)
 
 source("R/parseAttacks.R")
 source("R/parseHolidays.R")
@@ -17,8 +23,13 @@ source("R/PIBs.R")
 source("R/parseURLs.R")
 source("R/modifyFrame.R")
 
-# Recuprem tots els atacs que s'han fet i els guardem en un dataframe
-attacks <- parseURL()
+# Recuperem tots els atacs que s'han fet i els guardem en un dataframe
+totalTableAtacs <- Carga_Atacs1()
+attacks <- Carga_Atacs2(totalTableAtacs)
+categoriesatacs <- Carga_Categories_atacs_Pais(attacks)
+pintaMapaAtaques(attacks,categoriesatacs)
+pintaMapaAtaques_noUSAGB(attacks,categoriesatacs)
+pintaResumAtacs(categoriesatacs)
 
 #Modifico el ID de pais de UK por GB para United Kingdom, así lo tratan los dataframes de holidays y PIBs
 attacks$Country[attacks$Country=="UK"] <- "GB"
@@ -46,16 +57,10 @@ title(main = "Dies dels atacs")
 
 
 #Obtener la relación de PIB por País
-df.PIBs <- PIBs()
-
-#Pintar PIB por regiones en BoxPlot --> Descartado
-#PintaRegion(df.PIBs)
-
-#Pintar PIB por tipos de economía en BoxPlot --> Descartado
-#PintaIncomeGroup(df.PIBs)
+PIBPaisFull <- PIBs1()
+df.PIBs <- PIBs2(PIBPaisFull)
 
 #Pintar PIB por tipos de economía más ordenado en Barras
-#Aquí hay un aggregate
 PIBxIncomeGroup(df.PIBs)
 
 #Juntar en un solo dataframe los ataques por países y su PIB

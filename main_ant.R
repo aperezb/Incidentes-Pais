@@ -1,24 +1,14 @@
 #Código principal que carga los dataframes que se precisan
 
-# Paquetes necesarios
-pkg <- c("countrycode", "dplyr", "rworldmap" )
-# Instalar paquetes que no esten instalados
-new.pkg <- pkg[!(pkg %in% installed.packages())]
-if (length(new.pkg))
-{
-  install.packages(new.pkg)
-}
-
-
-#install.packages("countrycode")
+install.packages("countrycode")
 library(countrycode)
 
-#install.packages("dplyr")
+install.packages("dplyr")
 library(dplyr)
 library(ggplot2)
 library(MASS)
 
-#install.packages("rworldmap")
+install.packages("rworldmap")
 library("rworldmap")
 
 source("R/parseAttacks.R")

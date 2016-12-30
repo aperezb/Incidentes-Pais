@@ -1,11 +1,19 @@
-#ruta="C:/Users/Angel/Dropbox/Master Ciberseg/03-Data Driven/RStudio/Practica"
-PIBs <- function(ruta="./Dades",
-                 fichPIBs="./Dades/API_NY.GDP.PCAP.PP.CD_DS2_en_csv_v2.csv",
-                 fichTipos="./Dades/Metadata_Country_API_NY.GDP.PCAP.PP.CD_DS2_en_csv_v2.csv"){
+
+PIBs1 <- function(fichPIBs="./Dades/API_NY.GDP.PCAP.PP.CD_DS2_en_csv_v2.csv"){
   # Propósito de la función: Obtener un Dataframe con PIBs de 2013 a 2016 de todos los países
   # Entrada:
-  #   ruta--> Path donde se encuentran los archivos .CSV que precisa
   #   fichPIBs --> fichero .CSV que contiene la relación de PIBs por país
+  # Salida, data.frame con:
+  PIBPaisFull <- read.csv(file = fichPIBs, skip = 4, header = TRUE, na.strings = 0)
+  
+  PIBPaisFull
+}
+
+PIBs2 <- function(PIBPaisFull,
+                  fichTipos="./Dades/Metadata_Country_API_NY.GDP.PCAP.PP.CD_DS2_en_csv_v2.csv") {
+  # Propósito de la función: Obtener un Dataframe con PIB por país
+  # Entrada:
+  #   PIBPaisFull --> dataframe generado en PIBs1
   #   fichTipos --> fichero .CSV que contiene datos de clasificación adicionales de países (Región y TipoIngresos del País)
   # Salida, data.frame con:
   #   Country.Name --> nombre largo del país (p.e: Spain)
@@ -16,18 +24,7 @@ PIBs <- function(ruta="./Dades",
   #   IncomeGroup --> Tipo de economía del País
   # Los ficheros .CSV se obtienen de: http://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD
 
-  # ASPECTOS PENDIENTES DE RESOLVER
-  # OK: Sustituir los NAs del data.frame origen por 0 para que no casque cuando lo crucen
-  # OK: Añadir al DataFrame la región del país y el tipo de economía que tiene
-  # Quitar el install.packages y el library de dentro de la función
-  # Cargar el CSV directamente del ZIP que está en la URL: http://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.PP.CD?downloadformat=csv
-  # OK: Montarlo en GIT
-  # Eliminar el warning porque PIBPais tiene más observaciones que TipoPais (cosas del Wordlbank)
-  # Control de errores por si no se puede cargar el dataframe
-
   # Obtener relación de PIBs por país
-  #setwd(ruta)
-  PIBPaisFull <- read.csv(file = fichPIBs, skip = 4, header = TRUE, na.strings = 0)
   PIBPais <- dplyr::select(PIBPaisFull,dplyr::one_of(c('Country.Name','Country.Code', 'X2015')))
   names(PIBPais)[2]<-"iso3c"
   names(PIBPais)[3]<-"PIB"
